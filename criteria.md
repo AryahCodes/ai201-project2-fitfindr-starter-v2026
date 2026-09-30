@@ -42,59 +42,40 @@ Given a query that matches no listings, the agent stops before calling
 
 ---
 
-## 3. Something about state
+## 3. The selected item reaches suggest_outfit unchanged
 
-<!-- YOU WRITE THIS ONE.
+On a matching query, `session["selected_item"]["id"]` is the same `id` passed
+into `suggest_outfit` as `new_item` — in 5 of 5 tries.
 
-     How would you know that the item your search found is the same item the
-     next tool received? Name something countable or observable.
-
-     This is the criterion people find hardest, because state failure doesn't
-     look like state failure — it looks like a tool problem. Something that
-     compares session["selected_item"] against what actually reached
-     suggest_outfit is the shape you're after. -->
-
-
-
-**Why this target:**
-
-
+**Why this target:** This path is straight-through (search → pick first result →
+suggest), so there is no reason for the id to drift. I picked 5 of 5 because
+if the wrong listing reaches the model, everything downstream looks broken even
+when the tools themselves work.
 
 ---
 
-## 4. Something about the fit card
+## 4. The fit card mentions price and platform
 
-<!-- YOU WRITE THIS ONE.
+On a matching query, the fit card string contains both the item's price (as
+shown in the listing, e.g. `$24`) and its platform name (depop, thredUp, or
+poshmark) — in at least 4 of 5 tries.
 
-     The fit card calls a model, so the same input can produce different words
-     each time. That's not a bug — it's the nature of the tool. So what would
-     make it acceptable?
-
-     Think about what you'd actually be unhappy to see. A caption that never
-     mentions the price? Two different items producing the same opening
-     sentence? A card longer than a caption anyone would post? Any of those can
-     be turned into a number. -->
-
-
-
-**Why this target:**
-
-
+**Why this target:** The model can word things differently each run, but price
+and platform are in every listing dict and the prompt asks for them. Missing
+both on more than one try would mean the card isn't grounded in the data. I
+didn't require 5 of 5 because wording can vary (e.g. "$24" vs "24 dollars").
 
 ---
 
-## 5. Your choice
+## 5. Search respects the price ceiling
 
-<!-- YOU WRITE THIS ONE TOO.
+When the query includes a max price, every listing in `session["search_results"]`
+has `price <= max_price` — in 5 of 5 tries.
 
-     Pick something you actually care about getting right. Speed, the empty
-     wardrobe path, what happens when the model can't be reached, whether the
-     search respects a price ceiling — anything, as long as it names a number
-     or an observable outcome. -->
-
-
-
-**Why this target:**
+**Why this target:** Price filtering is plain numeric comparison with no model
+involved, so it should never slip. Criterion 1 already tests the happy path
+end-to-end; this checks that the search layer actually honors what the user
+asked for.
 
 
 
